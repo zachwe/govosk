@@ -24,8 +24,26 @@ package govosk
 // #cgo LDFLAGS: ${SRCDIR}/../kaldi/tools/openfst/lib/libfst.a
 // #cgo LDFLAGS: ${SRCDIR}/../kaldi/tools/openfst/lib/libfstngram.a
 // #cgo LDFLAGS: -lgfortran -lpthread
+// #include <stdlib.h>
 // #include "vosk_api.h"
 import "C"
+import (
+	"fmt"
+)
+
+func VoskFinalResult(recognizer *VoskRecognizer, buffer []byte) string {
+	cbuf := C.CBytes(buffer)
+	defer C.free(cbuf)
+	final := C.vosk_recognizer_accept_waveform(recognizer.rec, (*C.char)(cbuf), C.int(len(buffer)))
+	if final != C.int(0) {
+		fmt.Println("final")
+	} else {
+		fmt.Println("not final")
+	}
+	result := C.GoString(C.vosk_recognizer_final_result(recognizer.rec))
+	fmt.Println(result)
+	return result
+}
 
 // NewModel creates a new VoskModel instance
 func NewModel(modelPath string) (*VoskModel, error) {
